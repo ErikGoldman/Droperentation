@@ -14,16 +14,38 @@
 <div class="main">
 <div class="title">Who Am I?</div>
 <div id="header-border-div"></div>
+
+<div>
 <div id="current"> 
-<div><img id="headshot" style="width:250px"></img></div>
-<div id="reveal" class="button blue" style="margin-top: 10px">[R]eveal Name</div>
-<div id="answerButtons" style="display:none">
-<div id="actualName"></div>
-<div id="gotIt"><a href="javascript:null">[Y] Got it!</a></div>
-<div id="missedIt"><a href="javascript:null">[N] Missed it =(</a></div>
+	<img id="headshot" style="width:250px"></img>
 </div>
-<span id="score"></span> with <span id="numRight"></span> out of <span id="numTotal"></span>
+<div id="statsBar">
+	<div id="score"></div>
+	
+	<div>
+	<div id="numRight"></div>
+	<div class="bigSlash">/</div>
+	<div id="numTotal"></div>
+	</div>
+	
+	<div id="numLeft"></div>
 </div>
+
+
+
+</div>
+</div>
+
+<div class="buttonContainer">
+	<div id="answerButtons" style="display:none">
+		<div id="actualName"></div>
+		<div class="submitButtons">
+			<div id="gotIt"><a href="javascript:null">&#10004; [Y] Got it!</a></div>
+			<div id="missedIt"><a href="javascript:null">[N] Missed it</a></div>
+		</div>
+	</div>
+	
+	<div id="reveal" class="button blue" style="margin-top: 10px">[R]eveal Name</div>
 </div>
 
 <script type="text/javascript">
@@ -55,6 +77,12 @@ function computeScore() {
 	$("#score").text(pct + "%");
 	$("#numRight").text(right)
 	$("#numTotal").text(right + wrong)
+
+	var numLeft  = 0;
+	if (quiz) {
+		numLeft = quiz.teammates.length;
+	}
+	$("#numLeft").text(numLeft + " left");
 };
 
 function setup () {
@@ -86,12 +114,16 @@ computeScore();
 
 
 $(document).keydown(function(e) {
-	if (e.keyCode == 82) {// r
+	switch (e.keyCode) {
+	case 82:
 		reveal();
-	} else if (e.keyCode == 89) { // y
+		break;
+	case 89:
 		gotIt();
-	} else if (e.keyCode == 78) { // n
+		break;
+	case 78:
 		missedIt();
+		break;
 	}
 });
 </script>

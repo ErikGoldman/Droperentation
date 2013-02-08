@@ -11,10 +11,71 @@
 
 #reveal {
 	font-size: 18px;
+	position: relative;
+	width: 155px;
+    height: 24px;
+    top: 0;
+	left: 195px;
 }
 
 #current {
 	margin-top: 20px;
+	display: inline;
+}
+
+#statsBar {
+	position: absolute;
+	width: 300px;
+	height: 333px;
+	top: 79px;
+	left: 850px;
+}
+
+#actualName {
+	font-size: 30px;
+	margin-bottom: 10px;
+	margin-top: 4px;
+}
+
+#gotIt, #missedIt {
+	display: inline;
+	font-size: 18px;
+	font-weight: bold;
+}
+
+#gotIt {
+	margin-right: 100px;
+}
+
+#gotIt a {
+	color: #0DBF1C;
+}
+
+#missedIt a {
+	color: #BF0D0D;
+}
+
+#answerButtons {
+	background: #EDEDED;
+	position: absolute;
+	width: 550px;
+    height: 100%;
+    top: 0;
+    left: 4px;
+    margin-top: 8px;
+    
+    border: 1px solid gray;
+	
+	z-index:10;
+	
+	text-align: center;
+}
+
+.buttonContainer {
+    width: 990px;
+    height: 80px;
+    position: relative;
+    margin-left: 440px;
 }
 
 .button {
