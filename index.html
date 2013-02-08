@@ -1,0 +1,99 @@
+<html>
+<head>
+<script src="lib/underscore-min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+<script type="text/javascript" src="src/data.js"></script>
+
+<link rel="stylesheet" type="text/css" href="style.css">
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+</head>
+<body>
+
+<iframe id="dataFrame" src="data/page.html" style="display:none" onload="setup();"></iframe>
+
+<div class="main">
+<div class="title">Who Am I?</div>
+<div id="header-border-div"></div>
+<div id="current"> 
+<div><img id="headshot" style="width:250px"></img></div>
+<div id="reveal" class="button blue" style="margin-top: 10px">[R]eveal Name</div>
+<div id="answerButtons" style="display:none">
+<div id="actualName"></div>
+<div id="gotIt"><a href="javascript:null">[Y] Got it!</a></div>
+<div id="missedIt"><a href="javascript:null">[N] Missed it =(</a></div>
+</div>
+<span id="score"></span> with <span id="numRight"></span> out of <span id="numTotal"></span>
+</div>
+</div>
+
+<script type="text/javascript">
+var quiz    = null;
+var current = null;
+
+var right = 0;
+var wrong = 0;
+
+function next() {
+	$("#answerButtons").hide();
+	computeScore();
+	
+	if (!quiz) {
+		alert("Uh oh-- error loading data!");
+		return;
+	}
+	
+	current = quiz.getNext();
+	if (!current) {
+		alert("You win!");
+	}
+	
+	$("#headshot").attr("src", current.img);
+};
+
+function computeScore() {
+	var pct = (right + wrong) ? Math.floor((right / (right + wrong)) * 100) : 0;
+	$("#score").text(pct + "%");
+	$("#numRight").text(right)
+	$("#numTotal").text(right + wrong)
+};
+
+function setup () {
+	quiz = new Quiz($("#dataFrame"));	
+	next();
+};
+
+function reveal() {
+	$("#actualName").text(current.name);
+	$("#answerButtons").show();
+};
+
+function gotIt() {
+	right++;
+	next();
+}
+
+function missedIt() {
+	wrong++;
+	next();
+}
+
+$("#reveal").on("click", reveal);
+
+$("#gotIt").on("click", gotIt);
+$("#missedIt").on("click", missedIt);
+
+computeScore();
+
+
+$(document).keydown(function(e) {
+	if (e.keyCode == 82) {// r
+		reveal();
+	} else if (e.keyCode == 89) { // y
+		gotIt();
+	} else if (e.keyCode == 78) { // n
+		missedIt();
+	}
+});
+</script>
+</body>
+</html>
