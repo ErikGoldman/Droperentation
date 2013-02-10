@@ -9,6 +9,29 @@
 	text-align: center;
 }
 
+#loginDialog {
+	position: absolute;
+	width: 800px;
+	height: 450px;
+	top: 90px;
+	left: 300px;
+	background: #F2F2F2;
+	text-align: center; 
+}
+
+.loginHeader {
+	font-size: 24px;
+	margin-top: 30px;
+}
+
+.loginText {
+	margin-top: 14px;
+}
+
+#loginEntry {
+	width: 300px;
+}
+
 #reveal {
 	font-size: 18px;
 	position: relative;
@@ -109,6 +132,16 @@
 #numTotal {
 	margin-left: 38px;
 	margin-top: -13px;
+}
+
+#cand0 {
+	background: #C8FFBD;
+	font-size: 18px;
+	font-weight: bold;
+}
+
+.candidates {
+	margin-top: 50px;
 }
 
 .button {

@@ -1,0 +1,217 @@
+<html>
+<head>
+<script src="static/lib/underscore-min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+<script type="text/javascript" src="static/src/data.js"></script>
+
+<link rel="stylesheet" type="text/css" href="static/style.css">
+<link rel="stylesheet" type="text/css" href="static/dbstyle.css">
+</head>
+<body>
+
+<iframe id="dataFrame" src="about_page.html" style="display:none" onload="setup();"></iframe>
+
+<div class="main">
+<div class="title">The Dropbox Name Game!</div>
+<div id="header-border-div" style="margin-bottom:30px"></div>
+
+<div>
+<div id="current"> 
+	<img id="headshot" style="width:250px"></img>
+</div>
+<div id="statsBar">
+	<div id="numLeft"></div>
+	
+	<div id="score"></div>
+	
+	<div class="fraction">
+	<div id="numRight"></div>
+	<div class="bigSlash">/</div>
+	<div id="numTotal"></div>
+	</div>
+</div>
+
+
+
+</div>
+</div>
+
+<div class="buttonContainer">
+	<div id="answerButtons" style="display:none">
+		<div id="actualName"></div>
+		<div class="submitButtons">
+			<div id="gotIt"><a href="javascript:null">&#10004; [Y] Got it!</a></div>
+			<div id="missedIt"><a href="javascript:null">[N] Missed it</a></div>
+		</div>
+	</div>
+	
+	<div id="reveal" class="button blue" style="margin-top: 10px">[R]eveal Name</div>
+</div>
+
+<div id="loginDialog" style="display:none">
+<div class="loginHeader">Type your name</div>
+
+
+<div class="loginText"><form id="loginForm"><input type="text" id="loginEntry"></input></form></div>
+
+<div class="candidates">
+	<div class="candidate" id="cand0"></div>
+	<div class="candidate" id="cand1"></div>
+	<div class="candidate" id="cand2"></div>
+</div>
+</div>
+
+<script type="text/javascript">
+var quiz    = null;
+var current = null;
+
+var right = 0;
+var wrong = 0;
+
+var iUser = {{ iUser }};
+
+var state = 0;
+var GUESSING = 1;
+var LOGGING_IN = 2;
+
+function next() {
+	$("#answerButtons").hide();
+	computeScore();
+	
+	if (!quiz) {
+		alert("Uh oh-- error loading data!");
+		return;
+	}
+	
+	current = quiz.getNext();
+	if (!current) {
+		alert("You win!");
+	}
+	
+	$("#headshot").attr("src", current.img);
+};
+
+function computeScore() {
+	var pct = (right + wrong) ? Math.floor((right / (right + wrong)) * 100) : 0;
+	$("#score").text(pct + "%");
+	$("#numRight").text(right)
+	$("#numTotal").text(right + wrong)
+
+	var numLeft  = 0;
+	if (quiz) {
+		numLeft = quiz.teammates.length;
+	}
+	$("#numLeft").text(numLeft + " left");
+};
+
+function setup () {
+	quiz = new Quiz($("#dataFrame"));		
+
+	if (!iUser) {
+		showLoginDialog();
+	} else {
+		loginComplete();
+	}	
+};
+
+function showLoginDialog() {
+	state = LOGGING_IN;	
+	$("#loginDialog").show();
+};
+
+function loginComplete() {
+	state = GUESSING;
+	next();
+};
+
+function logOut() {
+	var onSuccess = function (data) {
+		showLoginDialog();
+	};
+	
+	iUser = null;
+	$.ajax("logout", {type: "POST", success: onSuccess});
+}
+
+function doLogin() {
+	var sName = $("#cand0").text();
+	if (!sName) {
+		alert("That person doesn't exist!");
+		return;
+	}
+	
+	var onSuccess = function (data) {
+		loginComplete();
+	};
+	
+	$.ajax("login", {type: "POST", data: {sUser: sName}, success: onSuccess});
+	
+	return false;
+}
+
+function reveal() {
+	if (state !== GUESSING) return;
+	
+	$("#actualName").text(current.name);
+	$("#answerButtons").show();
+};
+
+function gotIt() {
+	if (state !== GUESSING) return;
+	
+	$.ajax("guess", {type: "POST", data: {toName: current.name, isCorrect:true}});
+	right++;
+	next();
+}
+
+function missedIt() {
+	if (state !== GUESSING) return;
+	
+	$.ajax("guess", {type: "POST", data: {toName: current.name, isCorrect:false}});
+	wrong++;
+	next();
+}
+
+function autocomplete() {
+	if (state !== LOGGING_IN) return;
+	
+	var sText = $("#loginEntry").val();
+	var candidates = quiz.autocomplete(sText, 3);
+	
+	for (var i=0; i < 3; i++) {
+		if (candidates[i]) {
+			$("#cand" + i).text(candidates[i].name);
+		} else {
+			$("#cand" + i).text("");
+		}
+	}
+}
+
+$("#reveal").on("click", reveal);
+
+$("#gotIt").on("click", gotIt);
+$("#missedIt").on("click", missedIt);
+$("#loginEntry").on("keydown", autocomplete);
+$("#loginEntry").on("keyup", autocomplete);
+
+$("#loginForm").on("submit", doLogin);
+
+computeScore();
+
+
+$(document).keydown(function(e) {
+	switch (e.keyCode) {
+	case 82:
+		reveal();
+		break;
+	case 89:
+		gotIt();
+		break;
+	case 78:
+		missedIt();
+		break;
+	}
+});
+</script>
+</body>
+</html>
