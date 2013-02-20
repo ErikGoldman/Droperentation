@@ -57,6 +57,9 @@ Quiz.prototype.numLeft = function () {
 Quiz.prototype.loadGuesses = function (guesses) {
   var removeSet = {};
 
+  this.incorrectOrUnanswered = this.rawteammates.slice();
+  this.numRight = this.numWrong = 0;
+
   for (var i=0; i < guesses.length; i++) {
     var g = guesses[i];
 
