@@ -16,14 +16,14 @@
 <div id="header-border-div" style="margin-bottom:30px"></div>
 
 <div>
-<div id="current"> 
+<div id="current">
 	<img id="headshot" style="width:250px"></img>
 </div>
 <div id="statsBar">
 	<div id="numLeft"></div>
-	
+
 	<div id="score"></div>
-	
+
 	<div class="fraction">
 	<div id="numRight"></div>
 	<div class="bigSlash">/</div>
@@ -44,7 +44,7 @@
 			<div id="missedIt"><a href="javascript:null">[N] Missed it</a></div>
 		</div>
 	</div>
-	
+
 	<div id="reveal" class="button blue" style="margin-top: 10px">[R]eveal Name</div>
 </div>
 
@@ -65,9 +65,6 @@
 var quiz    = null;
 var current = null;
 
-var right = 0;
-var wrong = 0;
-
 var iUser = {{ iUser }};
 
 var state = 0;
@@ -77,58 +74,59 @@ var LOGGING_IN = 2;
 function next() {
 	$("#answerButtons").hide();
 	computeScore();
-	
+
 	if (!quiz) {
 		alert("Uh oh-- error loading data!");
 		return;
 	}
-	
+
 	current = quiz.getNext();
 	if (!current) {
 		alert("You win!");
 	}
-	
+
 	$("#headshot").attr("src", current.img);
 };
 
 function computeScore() {
-	var pct = (right + wrong) ? Math.floor((right / (right + wrong)) * 100) : 0;
-	$("#score").text(pct + "%");
-	$("#numRight").text(right)
-	$("#numTotal").text(right + wrong)
+	$("#score").text( (quiz ? quiz.getPercentage() : 0) + "%");
+	$("#numRight").text(quiz.numRight)
+	$("#numWrong").text(quiz.numWrong)
 
-	var numLeft  = 0;
-	if (quiz) {
-		numLeft = quiz.teammates.length;
-	}
+	var numLeft  = quiz ? quiz.numLeft() : 0;
 	$("#numLeft").text(numLeft + " left");
 };
 
 function setup () {
-	quiz = new Quiz($("#dataFrame"));		
+	quiz = new Quiz($("#dataFrame"));
 
 	if (!iUser) {
 		showLoginDialog();
 	} else {
 		loginComplete();
-	}	
+	}
 };
 
 function showLoginDialog() {
-	state = LOGGING_IN;	
+	state = LOGGING_IN;
 	$("#loginDialog").show();
 };
 
 function loginComplete() {
-	state = GUESSING;
-	next();
+  	var onData = function (data) {
+  	  	quiz.loadGuesses(data.guesses);
+  		state = GUESSING;
+  		next();
+  	};
+
+  	$.ajax("/get_data", {success: onData});
 };
 
 function logOut() {
 	var onSuccess = function (data) {
 		showLoginDialog();
 	};
-	
+
 	iUser = null;
 	$.ajax("logout", {type: "POST", success: onSuccess});
 }
@@ -139,45 +137,45 @@ function doLogin() {
 		alert("That person doesn't exist!");
 		return;
 	}
-	
+
 	var onSuccess = function (data) {
 		loginComplete();
 	};
-	
+
 	$.ajax("login", {type: "POST", data: {sUser: sName}, success: onSuccess});
-	
+
 	return false;
 }
 
 function reveal() {
 	if (state !== GUESSING) return;
-	
+
 	$("#actualName").text(current.name);
 	$("#answerButtons").show();
 };
 
 function gotIt() {
 	if (state !== GUESSING) return;
-	
+
 	$.ajax("guess", {type: "POST", data: {toName: current.name, isCorrect:true}});
-	right++;
+	quiz.markAnswered(current.name, true);
 	next();
 }
 
 function missedIt() {
 	if (state !== GUESSING) return;
-	
+
 	$.ajax("guess", {type: "POST", data: {toName: current.name, isCorrect:false}});
-	wrong++;
+	quiz.markAnswered(current.name, false);
 	next();
 }
 
 function autocomplete() {
 	if (state !== LOGGING_IN) return;
-	
+
 	var sText = $("#loginEntry").val();
 	var candidates = quiz.autocomplete(sText, 3);
-	
+
 	for (var i=0; i < 3; i++) {
 		if (candidates[i]) {
 			$("#cand" + i).text(candidates[i].name);

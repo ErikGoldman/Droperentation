@@ -8,7 +8,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
- 
+
 engine = create_engine('sqlite:///guesses.db', echo=True)
 Base = declarative_base()
 
@@ -33,7 +33,8 @@ class User(Base):
 class Guess(Base):
     __tablename__ = "guess"
 
-    isCorrect = db.Boolean()
+    isCorrect = Column(db.Boolean)
+    wrongTimes = Column(Integer, default=0)
 
     owner_id = Column(Integer, ForeignKey('user_table.id'), primary_key=True)
     toUser_id = Column(Integer, ForeignKey('user_table.id'), primary_key=True)
@@ -49,21 +50,32 @@ def get_or_create_user_by_name(session, sName):
        session.commit()
     return out
 
+def get_user_by_id(session, iUser):
+  return session.query(User).filter(User.id==iUser).first()
+
 def get_all_guesses(session, iUser):
-    return session.query(Guess).filter(Guess.owner_id==iUser).all()
+  return session.query(Guess).filter(Guess.owner_id==iUser).all()
 
 def add_new_guess(session, iFrom, iTo, bGuess):
-    g = Guess()
-    g.owner_id = iFrom
-    g.toUser_id = iTo
-    g.isCorrect = bGuess
-    session.add(g)
+    guess = session.query(Guess).filter(Guess.owner_id==iFrom, Guess.toUser_id==iTo).first()
+
+    if not guess:
+      guess = Guess()
+      guess.owner_id = iFrom
+      guess.toUser_id = iTo
+      guess.wrongTimes = 0;
+      session.add(guess)
+
+    guess.isCorrect = bGuess
+    if not bGuess:
+      guess.wrongTimes += 1
+
     session.commit()
 
 @app.route("/")
 def index():
     iUser = request.cookies.get("iUser")
-    if not iUser:
+    if not iUser or get_user_by_id(Session(), iUser) == None:
        iUser = "null"
     return render_template("index.html", iUser=iUser)
 
@@ -71,11 +83,19 @@ def index():
 def about_page():
     return render_template("about_page.html")
 
+@app.route("/get_data")
+def get_data():
+    iUser = request.cookies.get("iUser")
+    session = Session()
+
+    return jsonify({"guesses": [{"to": g.toUser.name, "correct": g.isCorrect, "wrongTimes": g.wrongTimes}
+                                for g in get_all_guesses(session, iUser)]})
+
 @app.route("/guess", methods=["POST"])
 def guess():
     iUser = request.cookies.get("iUser")
     sTo = request.form["toName"]
-    bCorrect = request.form["isCorrect"]
+    bCorrect = (request.form["isCorrect"] == "true")
 
     s = Session()
 
@@ -91,7 +111,7 @@ def logout():
 @app.route("/login", methods=["POST"])
 def login():
     sUser = request.form["sUser"]
-    
+
     session = Session()
     oUser = get_or_create_user_by_name(session, sUser)
 
