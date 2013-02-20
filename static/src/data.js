@@ -51,7 +51,7 @@ Quiz.prototype.getPercentage = function () {
 };
 
 Quiz.prototype.numLeft = function () {
-  return this.incorrectOrUnanswered.length;
+  return this.incorrectOrUnanswered.length + this.currentSlice.length;
 };
 
 Quiz.prototype.loadGuesses = function (guesses) {
@@ -61,7 +61,7 @@ Quiz.prototype.loadGuesses = function (guesses) {
     var g = guesses[i];
 
     if (g.correct) {
-      removeSet[g.name] = true;
+      removeSet[g.to] = true;
       this.numRight++;
     }
 
